@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPR Medications Learning System v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card-flip {
+            perspective: 1000px;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .card-flip.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        .quiz-option {
+            transition: all 0.3s ease;
+        }
+        .quiz-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .quiz-option.correct {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        .quiz-option.incorrect {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+        .quiz-option.disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .nav-tab {
+            transition: all 0.3s ease;
+        }
+        .nav-tab.active {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-full">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+                💊 CPR Medications Learning System v2
+            </h1>
+            <p class="text-gray-600 text-lg">ระบบเรียนรู้ยาช่วยชีวิต พร้อมข้อสอบหลังเรียน</p>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex justify-center mb-8">
+            <div class="bg-white rounded-xl p-2 shadow-lg">
+                <button onclick="switchMode('flashcards')" class="nav-tab active px-8 py-3 rounded-lg font-medium" id="flashcards-tab">
+                    📚 Flash Cards
+                </button>
+                <button onclick="switchMode('quiz')" class="nav-tab px-8 py-3 rounded-lg font-medium text-gray-600" id="quiz-tab">
+                    🧠 ข้อสอบ
+                </button>
+                <button onclick="switchMode('results')" class="nav-tab px-8 py-3 rounded-lg font-medium text-gray-600" id="results-tab">
+                    📊 ผลคะแนน
+                </button>
+            </div>
+        </div>
+
+        <!-- Flash Cards Mode -->
+        <div id="flashcards-mode" class="mode-content">
+            <!-- Progress Bar -->
+            <div class="mb-6 bg-white rounded-xl p-6 shadow-lg">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-lg font-semibold text-gray-700">ความคืบหน้าการศึกษา</span>
+                    <span class="text-lg text-gray-600 font-medium" id="progress-text">0/15</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4">
+                    <div class="progress-bar bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 h-4 rounded-full" id="progress-bar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex flex-wrap gap-4 mb-6 justify-center">
+                <button onclick="shuffleCards()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-3 rounded-xl font-medium transition-all transform hover:scale-105 shadow-lg">
+                    🔀 สลับการ์ด
+                </button>
+                <button onclick="resetProgress()" class="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-8 py-3 rounded-xl font-medium transition-all transform hover:scale-105 shadow-lg">
+                    🔄 รีเซ็ต
+                </button>
+                <button onclick="showAll()" class="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-8 py-3 rounded-xl font-medium transition-all transform hover:scale-105 shadow-lg">
+                    👁️ ดูทั้งหมด
+                </button>
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="flex flex-wrap gap-3 mb-8 justify-center">
+                <button onclick="filterCards('all')" class="filter-btn bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl text-sm font-medium transition-all transform hover:scale-105 shadow-md">
+                    ทั้งหมด
+                </button>
+                <button onclick="filterCards('vasopressor')" class="filter-btn bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-xl text-sm font-medium transition-all transform hover:scale-105 shadow-md">
+                    🟥 Vasopressor
+                </button>
+                <button onclick="filterCards('antiarrhythmic')" class="filter-btn bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl text-sm font-medium transition-all transform hover:scale-105 shadow-md">
+                    🟦 Antiarrhythmic
+                </button>
+                <button onclick="filterCards('anticholinergic')" class="filter-btn bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl text-sm font-medium transition-all transform hover:scale-105 shadow-md">
+                    🟩 Anticholinergic
+                </button>
+                <button onclick="filterCards('svt')" class="filter-btn bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-6 py-3 rounded-xl text-sm font-medium transition-all transform hover:scale-105 shadow-md">
+                    🟨 SVT Therapy
+                </button>
+                <button onclick="filterCards('electrolyte')" class="filter-btn bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl text-sm font-medium transition-all transform hover:scale-105 shadow-md">
+                    🟪 Electrolyte
+                </button>
+                <button onclick="filterCards('metabolic')" class="filter-btn bg-gradient-to-r from-indigo-500 to-indigo-600 text-white px-6 py-3 rounded-xl text-sm font-medium transition-all transform hover:scale-105 shadow-md">
+                    🟣 Metabolic
+                </button>
+                <button onclick="filterCards('inotropic')" class="filter-btn bg-gradient-to-r from-rose-500 to-rose-600 text-white px-6 py-3 rounded-xl text-sm font-medium transition-all transform hover:scale-105 shadow-md">
+                    🔴 Inotropic
+                </button>
+                <button onclick="filterCards('thrombolytic')" class="filter-btn bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-3 rounded-xl text-sm font-medium transition-all transform hover:scale-105 shadow-md">
+                    🩸 Thrombolytic
+                </button>
+                <button onclick="filterCards('diuretic')" class="filter-btn bg-gradient-to-r from-cyan-500 to-cyan-600 text-white px-6 py-3 rounded-xl text-sm font-medium transition-all transform hover:scale-105 shadow-md">
+                    💧 Diuretic
+                </button>
+            </div>
+
+            <!-- Flash Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="cards-container">
+                <!-- Cards will be generated by JavaScript -->
+            </div>
+
+            <!-- Study Stats -->
+            <div class="mt-8 bg-white rounded-xl p-8 shadow-lg">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">📊 สถิติการศึกษา</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200">
+                        <div class="text-3xl font-bold text-green-600" id="studied-count">0</div>
+                        <div class="text-sm text-gray-600 mt-1">ศึกษาแล้ว</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200">
+                        <div class="text-3xl font-bold text-blue-600" id="remaining-count">15</div>
+                        <div class="text-sm text-gray-600 mt-1">เหลือ</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200">
+                        <div class="text-3xl font-bold text-purple-600" id="total-flips">0</div>
+                        <div class="text-sm text-gray-600 mt-1">พลิกทั้งหมด</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl border border-orange-200">
+                        <div class="text-3xl font-bold text-orange-600" id="completion-rate">0%</div>
+                        <div class="text-sm text-gray-600 mt-1">เสร็จสิ้น</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Mode -->
+        <div id="quiz-mode" class="mode-content hidden">
+            <div class="max-w-4xl mx-auto">
+                <!-- Quiz Header -->
+                <div class="bg-white rounded-xl p-8 shadow-lg mb-8">
+                    <div class="text-center">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-4">🧠 ข้อสอบยาช่วยชีวิต</h2>
+                        <div class="flex justify-center items-center space-x-8 text-lg">
+                            <div class="text-blue-600 font-semibold">
+                                คำถามที่ <span id="current-question">1</span> / <span id="total-questions">10</span>
+                            </div>
+                            <div class="text-green-600 font-semibold">
+                                คะแนน: <span id="current-score">0</span>
+                            </div>
+                            <div class="text-purple-600 font-semibold">
+                                เวลา: <span id="quiz-timer">00:00</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3 mt-6">
+                        <div class="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-300" id="quiz-progress" style="width: 10%"></div>
+                    </div>
+                </div>
+
+                <!-- Quiz Question -->
+                <div class="bg-white rounded-xl p-8 shadow-lg mb-6 fade-in" id="quiz-container">
+                    <div class="text-center mb-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4" id="question-text">กำลังโหลดคำถาม...</h3>
+                        <div class="text-gray-600" id="question-category"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="quiz-options">
+                        <!-- Options will be generated by JavaScript -->
+                    </div>
+                    
+                    <div class="text-center mt-8">
+                        <button onclick="nextQuestion()" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-medium transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" id="next-btn" disabled>
+                            ข้อถัดไป →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quiz Controls -->
+                <div class="text-center">
+                    <button onclick="startQuiz()" class="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-8 py-3 rounded-xl font-medium transition-all transform hover:scale-105 shadow-lg mr-4" id="start-quiz-btn">
+                        🚀 เริ่มข้อสอบ
+                    </button>
+                    <button onclick="resetQuiz()" class="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-8 py-3 rounded-xl font-medium transition-all transform hover:scale-105 shadow-lg">
+                        🔄 เริ่มใหม่
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Mode -->
+        <div id="results-mode" class="mode-content hidden">
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white rounded-xl p-8 shadow-lg">
+                    <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">📊 ประวัติผลคะแนน</h2>
+                    
+                    <!-- Summary Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200 text-center">
+                            <div class="text-3xl font-bold text-blue-600" id="total-attempts">0</div>
+                            <div class="text-sm text-gray-600 mt-1">ครั้งที่สอบ</div>
+                        </div>
+                        <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200 text-center">
+                            <div class="text-3xl font-bold text-green-600" id="average-score">0%</div>
+                            <div class="text-sm text-gray-600 mt-1">คะแนนเฉลี่ย</div>
+                        </div>
+                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200 text-center">
+                            <div class="text-3xl font-bold text-purple-600" id="best-score">0%</div>
+                            <div class="text-sm text-gray-600 mt-1">คะแนนสูงสุด</div>
+                        </div>
+                    </div>
+
+                    <!-- Results Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full table-auto">
+                            <thead>
+                                <tr class="bg-gray-50">
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ครั้งที่</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วันที่</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">คะแนน</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">เวลาที่ใช้</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">เกรด</th>
+                                </tr>
+                            </thead>
+                            <tbody id="results-table" class="bg-white divide-y divide-gray-200">
+                                <!-- Results will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="text-center mt-8">
+                        <button onclick="exportResults()" class="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-8 py-3 rounded-xl font-medium transition-all transform hover:scale-105 shadow-lg mr-4">
+                            📊 ส่งออกผลคะแนน
+                        </button>
+                        <button onclick="clearResults()" class="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-8 py-3 rounded-xl font-medium transition-all transform hover:scale-105 shadow-lg">
+                            🗑️ ลบประวัติ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Medications data
+        const medications = [
+            {
+                id: 1,
+                category: 'vasopressor',
+                categoryName: '🟥 Vasopressor / Sympathomimetic',
+                name: 'Epinephrine (Adrenaline)',
+                mechanism: 'กระตุ้น α & β adrenergic',
+                indication: 'CPR, เพิ่มการไหลเวียนเลือดหัวใจ/สมอง',
+                dosage: '1 mg IV/IO ทุก 3–5 นาที (ไม่ต้องผสม)',
+                caution: 'Arrhythmias, Pulmonary edema, Pupils ขยาย',
+                color: 'bg-red-500'
+            },
+            {
+                id: 2,
+                category: 'antiarrhythmic',
+                categoryName: '🟦 Antiarrhythmic',
+                name: 'Amiodarone',
+                mechanism: 'ยับยั้งช่อง Na+/K+/Ca2+',
+                indication: 'Antiarrhythmic (AF, VT, VF)',
+                dosage: '300 mg IV/IO bolus → 150 mg ถ้าจำเป็น (ผสม 20–30 mL D5W)',
+                caution: 'QTc prolong, Bradycardia, Hypotension, ตับ',
+                color: 'bg-blue-500'
+            },
+            {
+                id: 3,
+                category: 'antiarrhythmic',
+                categoryName: '🟦 Antiarrhythmic',
+                name: 'Lidocaine',
+                mechanism: 'Class Ib → ลด excitability ของหัวใจ',
+                indication: 'VT/VF resistant',
+                dosage: '1–1.5 mg/kg IV/IO bolus → 0.5–0.75 mg/kg ทุก 5–10 นาที (Dilute กับ NSS/D5W)',
+                caution: 'Seizure, Bradycardia, CNS toxicity',
+                color: 'bg-blue-500'
+            },
+            {
+                id: 4,
+                category: 'anticholinergic',
+                categoryName: '🟩 Anticholinergic',
+                name: 'Atropine',
+                mechanism: 'ต้าน Muscarinic (Ach)',
+                indication: 'Bradycardia',
+                dosage: '0.5 mg IV ทุก 3–5 นาที, max 3 mg (พร้อมใช้)',
+                caution: 'ท้องผูก, ใจสั่น, ตาพร่า',
+                color: 'bg-green-500'
+            },
+            {
+                id: 5,
+                category: 'svt',
+                categoryName: '🟨 SVT Therapy',
+                name: 'Adenosine',
+                mechanism: 'ชะลอ SA & AV node',
+                indication: 'SVT (หัวใจเต้นเร็วเหนือห้องหัวใจ)',
+                dosage: '6 mg IV rapid push → 12 mg ถ้าไม่ตอบ, flush 20 mL NSS',
+                caution: 'AV block, หอบหืด, Hypersensitivity',
+                color: 'bg-yellow-500'
+            },
+            {
+                id: 6,
+                category: 'electrolyte',
+                categoryName: '🟪 Electrolyte / Metabolic',
+                name: 'Magnesium sulfate 50%',
+                mechanism: 'ปรับสมดุล Mg ในหัวใจ',
+                indication: 'Torsades de pointes, Hypomagnesemia',
+                dosage: '1–2 g IV dilute 10 mL D5W over 5–20 min',
+                caution: 'กดหายใจ, กล้ามเนื้ออ่อนแรง, ง่วงซึม',
+                color: 'bg-purple-500'
+            },
+            {
+                id: 7,
+                category: 'electrolyte',
+                categoryName: '🟪 Electrolyte / Metabolic',
+                name: 'Sodium bicarbonate 7.5%',
+                mechanism: 'ปรับ pH เลือด',
+                indication: 'Hyperkalemia, TCA overdose',
+                dosage: '1 mEq/kg IV bolus, dilute 50 mL D5W/NSS',
+                caution: 'Extravasation → tissue necrosis',
+                color: 'bg-purple-500'
+            },
+            {
+                id: 8,
+                category: 'electrolyte',
+                categoryName: '🟪 Electrolyte / Metabolic',
+                name: 'Calcium gluconate',
+                mechanism: 'เพิ่ม Ca ในกล้ามเนื้อหัวใจ',
+                indication: 'Hyperkalemia, Hypocalcemia, Ca blocker OD',
+                dosage: 'Calcium gluconate 1-2 ampules IV slow push',
+                caution: 'ห้ามให้คู่ Sodium bicarbonate',
+                color: 'bg-purple-500'
+            },
+            {
+                id: 9,
+                category: 'metabolic',
+                categoryName: '🟣 Metabolic Support',
+                name: 'Glucose 50%',
+                mechanism: 'ให้พลังงาน & สงวนโปรตีน',
+                indication: 'Hypoglycemia',
+                dosage: '25-50 mL IV push (ตรวจ glucose ก่อน)',
+                caution: 'Hyperglycemia, Pulmonary edema, Hypersensitivity',
+                color: 'bg-indigo-500'
+            },
+            {
+                id: 10,
+                category: 'inotropic',
+                categoryName: '🔴 Inotropic / Vasopressor',
+                name: 'Dobutamine',
+                mechanism: 'β1 agonist → เพิ่มแรงบีบหัวใจ',
+                indication: 'Heart failure, Cardiogenic shock',
+                dosage: '2.5-15 mcg/kg/min IV infusion',
+                caution: 'Tachycardia, Arrhythmias, Hypotension',
+                color: 'bg-rose-600'
+            },
+            {
+                id: 11,
+                category: 'inotropic',
+                categoryName: '🔴 Inotropic / Vasopressor',
+                name: 'Dopamine',
+                mechanism: 'Dopamine + α/β agonist',
+                indication: 'Shock, เพิ่มแรงบีบหัวใจ & ความดันเลือด',
+                dosage: '5-20 mcg/kg/min IV infusion',
+                caution: 'Tachycardia, Arrhythmias, Extravasation',
+                color: 'bg-rose-600'
+            },
+            {
+                id: 12,
+                category: 'inotropic',
+                categoryName: '🔴 Inotropic / Vasopressor',
+                name: 'Norepinephrine',
+                mechanism: 'α1 > β1 agonist → เพิ่มความดันเลือด',
+                indication: 'Septic shock, Hypotension',
+                dosage: '0.1-2 mcg/kg/min IV infusion',
+                caution: 'Severe vasoconstriction, Extravasation',
+                color: 'bg-rose-600'
+            },
+            {
+                id: 13,
+                category: 'thrombolytic',
+                categoryName: '🩸 Emergency Thrombolytic',
+                name: 'Streptokinase',
+                mechanism: 'ละลายลิ่มเลือด',
+                indication: 'STEMI, Massive PE, Stroke',
+                dosage: '1.5 million units IV over 60 min',
+                caution: 'Bleeding, Allergic reactions, Hypotension',
+                color: 'bg-red-700'
+            },
+            {
+                id: 14,
+                category: 'thrombolytic',
+                categoryName: '🩸 Emergency Thrombolytic',
+                name: 'rtPA',
+                mechanism: 'ละลายลิ่มเลือด (tissue specific)',
+                indication: 'STEMI, Stroke, PE',
+                dosage: '0.9 mg/kg (10% bolus 1 minute then 90% infusion 1 hour)',
+                caution: 'ICH risk, Bleeding, Time window critical',
+                color: 'bg-red-700'
+            },
+            {
+                id: 15,
+                category: 'diuretic',
+                categoryName: '💧 Diuretic',
+                name: 'Furosemide',
+                mechanism: 'ขับ Na+/น้ำออกจากไต',
+                indication: 'CHF, Edema, Hypertension',
+                dosage: '20-80 mg IV/PO (ปรับตามอาการ)',
+                caution: 'Ototoxicity, Hypovolemia, Hypokalemia',
+                color: 'bg-cyan-600'
+            }
+        ];
+
+        // Quiz questions
+        const quizQuestions = [
+            {
+                question: "ยาใดที่ใช้เป็นยาแรกในการ CPR?",
+                options: ["Amiodarone", "Epinephrine", "Atropine", "Lidocaine"],
+                correct: 1,
+                category: "vasopressor",
+                explanation: "Epinephrine เป็นยาแรกที่ใช้ใน CPR เพื่อเพิ่มการไหลเวียนเลือดไปยังหัวใจและสมอง"
+            },
+            {
+                question: "ขนาดยา Epinephrine ที่ใช้ใน CPR คือ?",
+                options: ["0.5 mg ทุก 3-5 นาที", "1 mg ทุก 3-5 นาที", "2 mg ทุก 3-5 นาที", "0.1 mg ทุก 3-5 นาที"],
+                correct: 1,
+                category: "vasopressor",
+                explanation: "ขนาดยา Epinephrine ใน CPR คือ 1 mg IV/IO ทุก 3-5 นาที"
+            },
+            {
+                question: "ยาใดที่ใช้รักษา SVT (Supraventricular Tachycardia)?",
+                options: ["Adenosine", "Amiodarone", "Lidocaine", "Atropine"],
+                correct: 0,
+                category: "svt",
+                explanation: "Adenosine เป็นยาที่ใช้รักษา SVT โดยการชะลอ SA และ AV node"
+            },
+            {
+                question: "ขนาดยา Adenosine ที่ใช้รักษา SVT คือ?",
+                options: ["3 mg → 6 mg", "6 mg → 12 mg", "12 mg → 18 mg", "1 mg → 2 mg"],
+                correct: 1,
+                category: "svt",
+                explanation: "ขนาดยา Adenosine คือ 6 mg IV rapid push แล้วตามด้วย 12 mg หากไม่ตอบสนอง"
+            },
+            {
+                question: "ยาใดที่ใช้รักษา Torsades de pointes?",
+                options: ["Calcium gluconate", "Magnesium sulfate", "Sodium bicarbonate", "Atropine"],
+                correct: 1,
+                category: "electrolyte",
+                explanation: "Magnesium sulfate ใช้รักษา Torsades de pointes และ Hypomagnesemia"
+            },
+            {
+                question: "ยาใดที่ใช้รักษา Bradycardia?",
+                options: ["Epinephrine", "Atropine", "Amiodarone", "Adenosine"],
+                correct: 1,
+                category: "anticholinergic",
+                explanation: "Atropine ใช้รักษา Symptomatic bradycardia โดยการต้าน Muscarinic receptor"
+            },
+            {
+                question: "ข้อควรระวังสำคัญของ Amiodarone คือ?",
+                options: ["Hyperkalemia", "QTc prolongation", "Hypoglycemia", "Respiratory depression"],
+                correct: 1,
+                category: "antiarrhythmic",
+                explanation: "Amiodarone สามารถทำให้เกิด QTc prolongation, Bradycardia และ Hypotension"
+            },
+            {
+                question: "ยาใดที่ห้ามให้ร่วมกับ Sodium bicarbonate?",
+                options: ["Epinephrine", "Calcium gluconate", "Magnesium sulfate", "Atropine"],
+                correct: 1,
+                category: "electrolyte",
+                explanation: "ห้ามให้ Calcium gluconate ร่วมกับ Sodium bicarbonate เพราะจะเกิดการตกตะกอน"
+            },
+            {
+                question: "กลไกการทำงานของ Furosemide คือ?",
+                options: ["กระตุ้น β receptor", "ยับยั้งช่อง Na+", "ขับ Na+/น้ำออกจากไต", "ต้าน Muscarinic"],
+                correct: 2,
+                category: "diuretic",
+                explanation: "Furosemide ทำงานโดยการขับ Na+ และน้ำออกจากไต ใช้รักษา CHF และ Edema"
+            },
+            {
+                question: "ยาใดที่ใช้ละลายลิ่มเลือดในกรณีฉุกเฉิน?",
+                options: ["Heparin", "Warfarin", "Streptokinase", "Aspirin"],
+                correct: 2,
+                category: "thrombolytic",
+                explanation: "Streptokinase และ rtPA เป็นยาละลายลิ่มเลือดที่ใช้ในกรณีฉุกเฉิน เช่น STEMI, PE, Stroke"
+            }
+        ];
+
+        // Global variables
+        let studiedCards = new Set();
+        let totalFlips = 0;
+        let currentFilter = 'all';
+        let currentMode = 'flashcards';
+        let quizState = {
+            currentQuestion: 0,
+            score: 0,
+            answers: [],
+            startTime: null,
+            timer: null
+        };
+        let quizResults = JSON.parse(localStorage.getItem('quizResults')) || [];
+
+        // Mode switching
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            // Update tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+                tab.classList.add('text-gray-600');
+            });
+            document.getElementById(`${mode}-tab`).classList.add('active');
+            document.getElementById(`${mode}-tab`).classList.remove('text-gray-600');
+            
+            // Show/hide content
+            document.querySelectorAll('.mode-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(`${mode}-mode`).classList.remove('hidden');
+            
+            if (mode === 'results') {
+                loadResults();
+            }
+        }
+
+        // Flash Cards Functions
+        function createCard(med) {
+            return `
+                <div class="card-flip h-80 cursor-pointer" data-id="${med.id}" data-category="${med.category}" onclick="flipCard(${med.id})">
+                    <div class="card-inner">
+                        <div class="card-front ${med.color} text-white shadow-xl rounded-xl">
+                            <div class="text-center">
+                                <h3 class="text-xl font-bold mb-2">${med.name}</h3>
+                                <p class="text-sm opacity-90 mb-4">${med.categoryName}</p>
+                                <div class="text-6xl mb-4">💊</div>
+                                <p class="text-sm opacity-75">คลิกเพื่อดูรายละเอียด</p>
+                            </div>
+                        </div>
+                        <div class="card-back bg-white shadow-xl border-l-4 ${med.color.replace('bg-', 'border-')} rounded-xl">
+                            <div class="text-left space-y-3 text-sm">
+                                <div>
+                                    <strong class="text-gray-700">กลไก:</strong>
+                                    <p class="text-gray-600">${med.mechanism}</p>
+                                </div>
+                                <div>
+                                    <strong class="text-gray-700">ใช้เมื่อ:</strong>
+                                    <p class="text-gray-600">${med.indication}</p>
+                                </div>
+                                <div>
+                                    <strong class="text-gray-700">ขนาด:</strong>
+                                    <p class="text-gray-600">${med.dosage}</p>
+                                </div>
+                                <div>
+                                    <strong class="text-red-600">ระวัง:</strong>
+                                    <p class="text-red-500">${med.caution}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCards() {
+            const container = document.getElementById('cards-container');
+            const filteredMeds = currentFilter === 'all' ? medications : medications.filter(med => med.category === currentFilter);
+            container.innerHTML = filteredMeds.map(createCard).join('');
+        }
+
+        function flipCard(id) {
+            const card = document.querySelector(`[data-id="${id}"]`);
+            card.classList.toggle('flipped');
+            
+            if (!studiedCards.has(id)) {
+                studiedCards.add(id);
+                updateProgress();
+            }
+            
+            totalFlips++;
+            updateStats();
+        }
+
+        function updateProgress() {
+            const progress = (studiedCards.size / medications.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            document.getElementById('progress-text').textContent = `${studiedCards.size}/${medications.length}`;
+        }
+
+        function updateStats() {
+            document.getElementById('studied-count').textContent = studiedCards.size;
+            document.getElementById('remaining-count').textContent = medications.length - studiedCards.size;
+            document.getElementById('total-flips').textContent = totalFlips;
+            document.getElementById('completion-rate').textContent = `${Math.round((studiedCards.size / medications.length) * 100)}%`;
+        }
+
+        function shuffleCards() {
+            medications.sort(() => Math.random() - 0.5);
+            renderCards();
+        }
+
+        function resetProgress() {
+            studiedCards.clear();
+            totalFlips = 0;
+            document.querySelectorAll('.card-flip').forEach(card => {
+                card.classList.remove('flipped');
+            });
+            updateProgress();
+            updateStats();
+        }
+
+        function showAll() {
+            document.querySelectorAll('.card-flip').forEach(card => {
+                card.classList.add('flipped');
+                const id = parseInt(card.dataset.id);
+                studiedCards.add(id);
+            });
+            updateProgress();
+            updateStats();
+        }
+
+        function filterCards(category) {
+            currentFilter = category;
+            
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-white');
+            });
+            event.target.classList.add('ring-2', 'ring-white');
+            
+            renderCards();
+        }
+
+        // Quiz Functions
+        function startQuiz() {
+            quizState = {
+                currentQuestion: 0,
+                score: 0,
+                answers: [],
+                startTime: new Date(),
+                timer: null
+            };
+            
+            document.getElementById('start-quiz-btn').style.display = 'none';
+            document.getElementById('quiz-container').classList.remove('hidden');
+            
+            startTimer();
+            showQuestion();
+        }
+
+        function startTimer() {
+            quizState.timer = setInterval(() => {
+                const elapsed = Math.floor((new Date() - quizState.startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('quiz-timer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function showQuestion() {
+            const question = quizQuestions[quizState.currentQuestion];
+            
+            document.getElementById('current-question').textContent = quizState.currentQuestion + 1;
+            document.getElementById('total-questions').textContent = quizQuestions.length;
+            document.getElementById('current-score').textContent = quizState.score;
+            
+            const progress = ((quizState.currentQuestion + 1) / quizQuestions.length) * 100;
+            document.getElementById('quiz-progress').style.width = `${progress}%`;
+            
+            document.getElementById('question-text').textContent = question.question;
+            document.getElementById('question-category').textContent = `หมวด: ${question.category}`;
+            
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = question.options.map((option, index) => `
+                <button class="quiz-option bg-white hover:bg-gray-50 border-2 border-gray-200 rounded-xl p-6 text-left transition-all transform hover:scale-105 shadow-md" 
+                        onclick="selectAnswer(${index})">
+                    <div class="font-medium text-gray-800">${String.fromCharCode(65 + index)}. ${option}</div>
+                </button>
+            `).join('');
+            
+            document.getElementById('next-btn').disabled = true;
+        }
+
+        function selectAnswer(selectedIndex) {
+            const question = quizQuestions[quizState.currentQuestion];
+            const options = document.querySelectorAll('.quiz-option');
+            
+            options.forEach((option, index) => {
+                option.classList.add('disabled');
+                if (index === question.correct) {
+                    option.classList.add('correct');
+                } else if (index === selectedIndex && index !== question.correct) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            if (selectedIndex === question.correct) {
+                quizState.score++;
+            }
+            
+            quizState.answers.push({
+                question: question.question,
+                selected: selectedIndex,
+                correct: question.correct,
+                isCorrect: selectedIndex === question.correct
+            });
+            
+            document.getElementById('current-score').textContent = quizState.score;
+            document.getElementById('next-btn').disabled = false;
+        }
+
+        function nextQuestion() {
+            quizState.currentQuestion++;
+            
+            if (quizState.currentQuestion >= quizQuestions.length) {
+                finishQuiz();
+            } else {
+                showQuestion();
+            }
+        }
+
+        function finishQuiz() {
+            clearInterval(quizState.timer);
+            
+            const endTime = new Date();
+            const duration = Math.floor((endTime - quizState.startTime) / 1000);
+            const percentage = Math.round((quizState.score / quizQuestions.length) * 100);
+            
+            const result = {
+                date: endTime.toLocaleDateString('th-TH'),
+                time: endTime.toLocaleTimeString('th-TH'),
+                score: quizState.score,
+                total: quizQuestions.length,
+                percentage: percentage,
+                duration: duration,
+                answers: quizState.answers
+            };
+            
+            quizResults.push(result);
+            localStorage.setItem('quizResults', JSON.stringify(quizResults));
+            
+            showQuizResult(result);
+        }
+
+        function showQuizResult(result) {
+            const grade = result.percentage >= 80 ? 'A' : result.percentage >= 70 ? 'B' : result.percentage >= 60 ? 'C' : result.percentage >= 50 ? 'D' : 'F';
+            const gradeColor = result.percentage >= 80 ? 'text-green-600' : result.percentage >= 60 ? 'text-yellow-600' : 'text-red-600';
+            
+            document.getElementById('quiz-container').innerHTML = `
+                <div class="text-center">
+                    <div class="text-6xl mb-4">${result.percentage >= 80 ? '🎉' : result.percentage >= 60 ? '👍' : '😔'}</div>
+                    <h3 class="text-3xl font-bold text-gray-800 mb-4">ผลการสอบ</h3>
+                    <div class="bg-gray-50 rounded-xl p-8 mb-6">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                            <div>
+                                <div class="text-2xl font-bold text-blue-600">${result.score}/${result.total}</div>
+                                <div class="text-sm text-gray-600">คะแนน</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-purple-600">${result.percentage}%</div>
+                                <div class="text-sm text-gray-600">เปอร์เซ็นต์</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold ${gradeColor}">${grade}</div>
+                                <div class="text-sm text-gray-600">เกรด</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-orange-600">${Math.floor(result.duration / 60)}:${(result.duration % 60).toString().padStart(2, '0')}</div>
+                                <div class="text-sm text-gray-600">เวลา</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-x-4">
+                        <button onclick="resetQuiz()" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-medium transition-all transform hover:scale-105 shadow-lg">
+                            🔄 สอบใหม่
+                        </button>
+                        <button onclick="switchMode('results')" class="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-8 py-3 rounded-xl font-medium transition-all transform hover:scale-105 shadow-lg">
+                            📊 ดูผลคะแนน
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function resetQuiz() {
+            quizState = {
+                currentQuestion: 0,
+                score: 0,
+                answers: [],
+                startTime: null,
+                timer: null
+            };
+            
+            document.getElementById('start-quiz-btn').style.display = 'inline-block';
+            document.getElementById('quiz-container').innerHTML = `
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">พร้อมทำข้อสอบแล้วหรือยัง?</h3>
+                    <p class="text-gray-600 mb-8">ข้อสอบมี ${quizQuestions.length} ข้อ ใช้เวลาประมาณ 10-15 นาที</p>
+                    <div class="text-6xl">🧠</div>
+                </div>
+            `;
+            
+            document.getElementById('current-question').textContent = '1';
+            document.getElementById('current-score').textContent = '0';
+            document.getElementById('quiz-timer').textContent = '00:00';
+            document.getElementById('quiz-progress').style.width = '10%';
+        }
+
+        // Results Functions
+        function loadResults() {
+            const totalAttempts = quizResults.length;
+            const averageScore = totalAttempts > 0 ? Math.round(quizResults.reduce((sum, result) => sum + result.percentage, 0) / totalAttempts) : 0;
+            const bestScore = totalAttempts > 0 ? Math.max(...quizResults.map(result => result.percentage)) : 0;
+            
+            document.getElementById('total-attempts').textContent = totalAttempts;
+            document.getElementById('average-score').textContent = `${averageScore}%`;
+            document.getElementById('best-score').textContent = `${bestScore}%`;
+            
+            const tableBody = document.getElementById('results-table');
+            tableBody.innerHTML = quizResults.map((result, index) => {
+                const grade = result.percentage >= 80 ? 'A' : result.percentage >= 70 ? 'B' : result.percentage >= 60 ? 'C' : result.percentage >= 50 ? 'D' : 'F';
+                const gradeColor = result.percentage >= 80 ? 'text-green-600' : result.percentage >= 60 ? 'text-yellow-600' : 'text-red-600';
+                
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${index + 1}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${result.date}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${result.score}/${result.total} (${result.percentage}%)</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${Math.floor(result.duration / 60)}:${(result.duration % 60).toString().padStart(2, '0')}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium ${gradeColor}">${grade}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function exportResults() {
+            if (quizResults.length === 0) {
+                alert('ไม่มีผลคะแนนให้ส่งออก');
+                return;
+            }
+            
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + "ครั้งที่,วันที่,เวลา,คะแนน,เปอร์เซ็นต์,เวลาที่ใช้,เกรด\n"
+                + quizResults.map((result, index) => {
+                    const grade = result.percentage >= 80 ? 'A' : result.percentage >= 70 ? 'B' : result.percentage >= 60 ? 'C' : result.percentage >= 50 ? 'D' : 'F';
+                    return `${index + 1},${result.date},${result.time},${result.score}/${result.total},${result.percentage}%,${Math.floor(result.duration / 60)}:${(result.duration % 60).toString().padStart(2, '0')},${grade}`;
+                }).join("\n");
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "quiz_results.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function clearResults() {
+            if (confirm('คุณต้องการลบประวัติผลคะแนนทั้งหมดหรือไม่?')) {
+                quizResults = [];
+                localStorage.removeItem('quizResults');
+                loadResults();
+            }
+        }
+
+        // Initialize
+        renderCards();
+        updateStats();
+        resetQuiz();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98f07fa242fc8963',t:'MTc2MDU0MzcwMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html><!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPR Medications Learning System - Google Apps Script Version</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { box-sizing: border-box; }
+        /* เพิ่ม CSS styles เดียวกับในไฟล์หลัก */
+    </style>
+</head>
+<body>
+    <!-- เนื้อหา HTML เดียวกับในไฟล์หลัก -->
+    
+    <script>
+        // เพิ่มฟังก์ชันสำหรับเชื่อมต่อกับ Google Apps Script
+        function saveResultToSheet(resultData) {
+            google.script.run
+                .withSuccessHandler(onSaveSuccess)
+                .withFailureHandler(onSaveFailure)
+                .saveQuizResult(resultData);
+        }
+        
+        function onSaveSuccess(result) {
+            console.log('บันทึกสำเร็จ:', result);
+        }
+        
+        function onSaveFailure(error) {
+            console.error('เกิดข้อผิดพลาด:', error);
+        }
+        
+        // แก้ไขฟังก์ชัน finishQuiz ให้บันทึกลง Google Sheets
+        function finishQuiz() {
+            clearInterval(quizState.timer);
+            
+            const endTime = new Date();
+            const duration = Math.floor((endTime - quizState.startTime) / 1000);
+            const percentage = Math.round((quizState.score / quizQuestions.length) * 100);
+            
+            const result = {
+                date: endTime.toLocaleDateString('th-TH'),
+                time: endTime.toLocaleTimeString('th-TH'),
+                score: quizState.score,
+                total: quizQuestions.length,
+                percentage: percentage,
+                duration: duration,
+                answers: quizState.answers
+            };
+            
+            // บันทึกลง localStorage
+            quizResults.push(result);
+            localStorage.setItem('quizResults', JSON.stringify(quizResults));
+            
+            // บันทึกลง Google Sheets
+            saveResultToSheet(result);
+            
+            showQuizResult(result);
+        }
+        
+        // เพิ่มโค้ด JavaScript อื่นๆ เดียวกับในไฟล์หลัก
+    </script>
+</body>
+</html>
+
