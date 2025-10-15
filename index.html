@@ -12,7 +12,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         .card-flip {
-            perspective: 1000px;
+            perspective: 1000px;ff
             height: 280px;
             margin-bottom: 20px;
         }
@@ -180,7 +180,7 @@
                     📚 Flash Cards
                 </button>
                 <button onclick="switchMode('quiz')" class="nav-tab px-6 py-3 rounded-lg font-medium text-gray-600 whitespace-nowrap" id="quiz-tab">
-                    🧠 ข้อสอบ (45 ข้อ)
+                    🧠 ข้อสอบ 25 ข้อ)
                 </button>
                 <button onclick="switchMode('results')" class="nav-tab px-6 py-3 rounded-lg font-medium text-gray-600 whitespace-nowrap" id="results-tab">
                     📊 ผลคะแนน
@@ -348,7 +348,7 @@
                 <!-- Quiz Controls -->
                 <div class="text-center">
                     <button onclick="startQuiz()" class="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-8 py-3 rounded-xl font-medium transition-all transform hover:scale-105 shadow-lg mr-4" id="start-quiz-btn">
-                        🚀 เริ่มข้อสอบ 45 ข้อ
+                        🚀 เริ่มข้อสอบ 25 ข้อ
                     </button>
                     <button onclick="resetQuiz()" class="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-8 py-3 rounded-xl font-medium transition-all transform hover:scale-105 shadow-lg">
                         🔄 เริ่มใหม่
@@ -1053,7 +1053,7 @@
                 timer: null
             };
             
-            // Shuffle questions and take all 45
+            // Shuffle questions and take all 25
             const shuffledQuestions = [...quizQuestions].sort(() => Math.random() - 0.5);
             quizState.questions = shuffledQuestions;
             
@@ -1067,7 +1067,7 @@
             document.getElementById('current-question').textContent = quizState.currentQuestion + 1;
             document.getElementById('current-score').textContent = quizState.score;
             
-            const progress = ((quizState.currentQuestion + 1) / 45) * 100;
+            const progress = ((quizState.currentQuestion + 1) / 25) * 100;
             document.getElementById('quiz-progress').style.width = `${progress}%`;
             
             document.getElementById('question-text').textContent = question.question;
@@ -1125,7 +1125,7 @@
         function nextQuestion() {
             quizState.currentQuestion++;
             
-            if (quizState.currentQuestion >= 45) {
+            if (quizState.currentQuestion >= 25) {
                 finishQuiz();
             } else {
                 showQuestion();
@@ -1137,13 +1137,13 @@
             
             const endTime = new Date();
             const duration = Math.floor((endTime - quizState.startTime) / 1000);
-            const percentage = Math.round((quizState.score / 45) * 100);
+            const percentage = Math.round((quizState.score / 25) * 100);
             
             const result = {
                 date: endTime.toLocaleDateString('th-TH'),
                 time: endTime.toLocaleTimeString('th-TH'),
                 score: quizState.score,
-                total: 45,
+                total: 25,
                 percentage: percentage,
                 duration: duration,
                 answers: quizState.answers
@@ -1185,7 +1185,7 @@
                 <div class="text-center">
                     <div class="text-6xl mb-6">${result.percentage >= 80 ? '🎉' : result.percentage >= 60 ? '👍' : '💪'}</div>
                     <h2 class="text-4xl font-bold text-gray-800 mb-4">ผลคะแนนของคุณ</h2>
-                    <div class="text-6xl font-bold ${gradeColor} mb-4">${result.score}/45</div>
+                    <div class="text-6xl font-bold ${gradeColor} mb-4">${result.score}25</div>
                     <div class="text-3xl font-bold text-gray-700 mb-2">${result.percentage}%</div>
                     <div class="text-2xl font-bold ${gradeColor} mb-6">เกรด ${grade}</div>
                     <div class="text-lg text-gray-600 mb-8">
