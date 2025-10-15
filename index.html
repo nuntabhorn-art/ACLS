@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html laang="th">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +12,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         .card-flip {
-            perspective: 1000px;ff
+            perspective: 1000px;
             height: 280px;
             margin-bottom: 20px;
         }
@@ -180,7 +180,7 @@
                     📚 Flash Cards
                 </button>
                 <button onclick="switchMode('quiz')" class="nav-tab px-6 py-3 rounded-lg font-medium text-gray-600 whitespace-nowrap" id="quiz-tab">
-                    🧠 ข้อสอบ 25 ข้อ)
+                    🧠 ข้อสอบ (25 ข้อ)
                 </button>
                 <button onclick="switchMode('results')" class="nav-tab px-6 py-3 rounded-lg font-medium text-gray-600 whitespace-nowrap" id="results-tab">
                     📊 ผลคะแนน
@@ -1053,7 +1053,7 @@
                 timer: null
             };
             
-            // Shuffle questions and take all 25
+            // Shuffle questions and take all 45
             const shuffledQuestions = [...quizQuestions].sort(() => Math.random() - 0.5);
             quizState.questions = shuffledQuestions;
             
@@ -1185,7 +1185,7 @@
                 <div class="text-center">
                     <div class="text-6xl mb-6">${result.percentage >= 80 ? '🎉' : result.percentage >= 60 ? '👍' : '💪'}</div>
                     <h2 class="text-4xl font-bold text-gray-800 mb-4">ผลคะแนนของคุณ</h2>
-                    <div class="text-6xl font-bold ${gradeColor} mb-4">${result.score}25</div>
+                    <div class="text-6xl font-bold ${gradeColor} mb-4">${result.score}/25</div>
                     <div class="text-3xl font-bold text-gray-700 mb-2">${result.percentage}%</div>
                     <div class="text-2xl font-bold ${gradeColor} mb-6">เกรด ${grade}</div>
                     <div class="text-lg text-gray-600 mb-8">
@@ -1823,5 +1823,10 @@
             initializeApp();
         });
     </script>
+    ผู้พัฒนา: อาจารย์นันตพร ทองเต็ม
+</footer>
+</head>
+</body>
+</html>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98f0f4e8d3dc8963',t:'MTc2MDU0ODUwNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
